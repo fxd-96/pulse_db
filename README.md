@@ -1,13 +1,14 @@
 hola mundo
 
-#nov
+#update: dece-08-2024
 
 
-2 partes.
+2da partes.
 
 backend que recibe los datos en tablas.
 
 modulo medidor de humedad (m1)
 
 receptor de datos (mr= main receptor)
+
 
