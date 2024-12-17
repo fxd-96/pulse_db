@@ -12,3 +12,5 @@ modulo medidor de humedad (m1)
 receptor de datos (mr= main receptor)
 
 
+this needs to be reedited 
+
