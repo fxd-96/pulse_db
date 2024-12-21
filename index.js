@@ -26,7 +26,7 @@ let db = new sqlite3.Database('./base.sqlite3', (err) => {
         if (err) {
             console.error(err.message);
         } else {
-            console.log('Tabla tareas creada o ya existente.');
+            console.log('Tabla creada o ya existente.');
         }
     });
 });
