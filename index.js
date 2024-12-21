@@ -41,7 +41,7 @@ app.post('/insert', jsonParser, function (req, res) {
     
 
     if (!todo) {
-        res.status(400).send('Falta información. formato incorrecto usa referencia : ');
+        res.status(400).send('missing información. formato incorrecto usa referencia : ');
         return;
     }
     const stmt  =  db.prepare('INSERT INTO todos (todo, created_at) VALUES (?, CURRENT_TIMESTAMP)');
