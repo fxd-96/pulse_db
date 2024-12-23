@@ -1,91 +1,47 @@
+ Create database
+CREATE DATABASE soil_moisture_db;
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const sqlite3 = require('sqlite3').verbose();
+-- Create table for sensors
+CREATE TABLE sensors (
+    sensor_id SERIAL PRIMARY KEY,
+    sensor_name VARCHAR(50) NOT NULL,
+    location VARCHAR(100),
+    installation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT true
+);
 
-//Documentación en https://expressjs.com/en/starter/hello-world.html
-const app = express()
+-- Create table for moisture readings
+CREATE TABLE moisture_readings (
+    reading_id SERIAL PRIMARY KEY,
+    sensor_id INTEGER REFERENCES sensors(sensor_id),
+    moisture_level DECIMAL(5,2) NOT NULL, -- Percentage value (0-100)
+    led_status VARCHAR(10) CHECK (led_status IN ('green', 'red')),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    battery_level DECIMAL(5,2), -- Optional battery level monitoring
+    temperature DECIMAL(5,2), -- Optional temperature reading
+    CONSTRAINT valid_moisture CHECK (moisture_level >= 0 AND moisture_level <= 100)
+);
 
-//Creamos un parser de tipo application/json
-//Documentación en https://expressjs.com/en/resources/middleware/body-parser.html
-const jsonParser = bodyParser.json()
+-- Create indexes for better query performance
+CREATE INDEX idx_sensor_readings ON moisture_readings(sensor_id, timestamp);
+CREATE INDEX idx_moisture_level ON moisture_readings(moisture_level);
 
+-- Create view for latest readings
+CREATE VIEW latest_readings AS
+SELECT 
+    s.sensor_id,
+    s.sensor_name,
+    s.location,
+    mr.moisture_level,
+    mr.led_status,
+    mr.timestamp,
+    mr.battery_level,
+    mr.temperature
+FROM sensors s
+JOIN moisture_readings mr ON s.sensor_id = mr.sensor_id
+WHERE mr.timestamp = (
+    SELECT MAX(timestamp)
+    FROM moisture_readings
+    WHERE sensor_id = s.sensor_id
+);
 
-// Abre la base de datos de SQLite
-let db = new sqlite3.Database('./base.sqlite3', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Conectado a la base de datos SQLite.');
-
-    db.run(`CREATE TABLE IF NOT EXISTS todos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        todo TEXT NOT NULL,
-        created_at INTEGER
-    )`, (err) => {
-        if (err) {
-            console.error(err.message);
-        } else {
-            console.log('Tabla creada o ya existente.');
-        }
-    });
-});
-
-//Creamos un endpoint de login que recibe los datos como json
-app.post('/insert', jsonParser, function (req, res) {
-    //Imprimimos el contenido del campo todo
-    const { todo } = req.body;
-   
-    console.log(todo);
-    res.setHeader('Content-Type', 'application/json');
-    
-
-    if (!todo) {
-        res.status(400).send('missing información. formato incorrecto usa referencia : ');
-        return;
-    }
-    const stmt  =  db.prepare('INSERT INTO todos (todo, created_at) VALUES (?, CURRENT_TIMESTAMP)');
-
-    stmt.run(todo, (err) => {
-        if (err) {
-          console.error("Error running stmt:", err);
-          res.status(500).send(err);
-          return;
-
-        } else {
-          console.log("Insert was successful!");
-        }
-    });
-
-    stmt.finalize();
-    
-    //Enviamos de regreso la respuesta
-    res.setHeader('Content-Type', 'application/json');
-    res.status(201).send();
-})
-
-
-
-app.get('/', function (req, res) {
-    //Enviamos de regreso la respuesta
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ 'status': 'ok-GOD' }));
-})
-
-
-//Creamos un endpoint de login que recibe los datos como json
-app.post('/login', jsonParser, function (req, res) {
-    //Imprimimos el contenido del body
-    console.log(req.body);
-
-    //Enviamos de regreso la respuesta
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ 'stats': '!OK' }));
-})
-
-//Corremos el servidor en el puerto 3000
-const port = 3000;
-
-app.listen(port, () => {
-    console.log(`Aplicación corriendo en http://localhost:${port}`)
-})
