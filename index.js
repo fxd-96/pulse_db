@@ -1,4 +1,6 @@
- Create database
+//*s=h*/
+
+Create database
 CREATE DATABASE soil_moisture_db;
 
 -- Create table for sensors
