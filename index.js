@@ -39,7 +39,7 @@ SELECT
     mr.timestamp,
     mr.battery_level,
     mr.temperature
-FROM sensors s
+FROM sensors ss
 JOIN moisture_readings mr ON s.sensor_id = mr.sensor_id
 WHERE mr.timestamp = (
     SELECT MAX(timestamp)
